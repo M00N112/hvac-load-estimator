@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HVAC Load Estimator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 20px; }
+        label, input, select, button { display: block; width: 100%; margin-top: 10px; }
+        .help { font-size: 0.9em; color: #666; margin-top: 2px; }
+    </style>
+</head>
+<body>
+    <h2>HVAC Load Estimator</h2>
+    <label>House Area (square feet):
+        <input type="number" id="area" placeholder="e.g. 1200">
+        <div class="help">Measure the length × width of all rooms and add them up.</div>
+    </label>
+    <label>Ceiling Height (feet):
+        <input type="number" id="height" placeholder="e.g. 8">
+        <div class="help">Standard homes have 8 ft ceilings. Measure from floor to ceiling.</div>
+    </label>
+    <label>Number of Occupants:
+        <input type="number" id="occupants" placeholder="e.g. 4">
+        <div class="help">Count people usually living in the house.</div>
+    </label>
+    <label>Large Windows Count:
+        <input type="number" id="windows" placeholder="e.g. 5">
+        <div class="help">Count any window larger than 4×4 ft that lets sunlight in.</div>
+    </label>
+    <label>Climate Zone:
+        <select id="climate">
+            <option value="cold">Cold</option>
+            <option value="mild">Mild</option>
+            <option value="hot">Hot</option>
+        </select>
+        <div class="help">Hot = desert/tropical, Cold = snowy winters, Mild = in-between.</div>
+    </label>
+    <label>Insulation Quality:
+        <select id="insulation">
+            <option value="poor">Poor</option>
+            <option value="average">Average</option>
+            <option value="good">Good</option>
+        </select>
+        <div class="help">Poor = older home, Good = modern or spray foam insulation.</div>
+    </label>
+    <button onclick="calculateBTU()">Calculate</button>
+    <h3 id="result"></h3>
+
+    <script>
+        function calculateBTU() {
+            const area = parseFloat(document.getElementById('area').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const occupants = parseInt(document.getElementById('occupants').value);
+            const windows = parseInt(document.getElementById('windows').value);
+            const climate = document.getElementById('climate').value;
+            const insulation = document.getElementById('insulation').value;
+
+            if (isNaN(area) || isNaN(height)) {
+                document.getElementById('result').innerText = "Please enter valid numbers.";
+                return;
+            }
+
+            let volume = area * height;
+            let btu = volume * 6;
+
+            if (climate === 'hot') btu *= 1.2;
+            if (climate === 'cold') btu *= 0.9;
+
+            if (insulation === 'poor') btu *= 1.15;
+            if (insulation === 'good') btu *= 0.9;
+
+            btu += occupants * 600;
+            btu += windows * 1000;
+
+            const tons = btu / 12000;
+            document.getElementById('result').innerText =
+                `Estimated Load: ${Math.round(btu)} BTU/hr (~${tons.toFixed(1)} tons)`;
+        }
+    </script>
+</body>
+</html>
