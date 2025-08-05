@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HVAC Load Estimator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e0e0e0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: #000;
+      color: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    label, input, select, button {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+    }
+    input, select {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background-color: #222;
+      color: white;
+    }
+    button {
+      padding: 10px;
+      border: none;
+      background-color: #444;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #666;
+    }
+    .help {
+      font-size: 0.9em;
+      color: #ccc;
+      margin-top: 2px;
+    }
+    #logo {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 1.2em;
+      color: white;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="logo">ミ★ 𝘈 𝘚 𝘛 𝘙 𝘖 ★彡</div>
+    <h2>HVAC Load Estimator</h2>
+    <label>House Area (square feet):
+      <input type="number" id="area" placeholder="e.g. 1200" />
+      <div class="help">Measure the length × width of all rooms and add them up.</div>
+    </label>
+    <label>Ceiling Height (feet):
+      <input type="number" id="height" placeholder="e.g. 8" />
+      <div class="help">Standard homes have 8 ft ceilings. Measure from floor to ceiling.</div>
+    </label>
+    <label>Number of Occupants:
+      <input type="number" id="occupants" placeholder="e.g. 4" />
+      <div class="help">Count people usually living in the house.</div>
+    </label>
+    <label>Large Windows Count:
+      <input type="number" id="windows" placeholder="e.g. 5" />
+      <div class="help">Count any window larger than 4×4 ft that lets sunlight in.</div>
+    </label>
+    <label>Climate Zone:
+      <select id="climate">
+        <option value="cold">Cold</option>
+        <option value="mild">Mild</option>
+        <option value="hot">Hot</option>
+      </select>
+      <div class="help">Hot = desert/tropical, Cold = snowy winters, Mild = in-between.</div>
+    </label>
+    <label>Insulation Quality:
+      <select id="insulation">
+        <option value="poor">Poor</option>
+        <option value="average">Average</option>
+        <option value="good">Good</option>
+      </select>
+      <div class="help">Poor = older home, Good = modern or spray foam insulation.</div>
+    </label>
+    <button onclick="calculateBTU()">Calculate</button>
+    <h3 id="result"></h3>
+  </div>
+
+  <script>
+    function calculateBTU() {
+      const area = parseFloat(document.getElementById('area').value);
+      const height = parseFloat(document.getElementById('height').value);
+      const occupants = parseInt(document.getElementById('occupants').value);
+      const windows = parseInt(document.getElementById('windows').value);
+      const climate = document.getElementById('climate').value;
+      const insulation = document.getElementById('insulation').value;
+
+      if (isNaN(area) || isNaN(height)) {
+        document.getElementById('result').innerText = "Please enter valid numbers.";
+        return;
+      }
+
+      let volume = area * height;
+      let btu = volume * 6;
+
+      if (climate === 'hot') btu *= 1.2;
+      if (climate === 'cold') btu *= 0.9;
+
+      if (insulation === 'poor') btu *= 1.15;
+      if (insulation === 'good') btu *= 0.9;
+
+      btu += occupants * 600;
+      btu += windows * 1000;
+
+      const tons = btu / 12000;
+      const suggestion = suggestRheemModel(btu);
+
+      document.getElementById('result').innerText =
+        `Estimated Load:
+${Math.round(btu)} BTU/hr
+(${tons.toFixed(1)} tons)
+
+${suggestion}`;
+    }
+
+    function suggestRheemModel(btu) {
+      const tons = btu / 12000;
+      const options = [
+        { model: "RA1624AJ1NA", tonnage: 2.0, seer: 16, type: "R-454B", line: "Classic" },
+        { model: "RA1630AJ1NA", tonnage: 2.5, seer: 16, type: "R-454B", line: "Classic" },
+        { model: "RA1636AJ1NA", tonnage: 3.0, seer: 16, type: "R-454B", line: "Classic" },
+        { model: "RA1642AJ1NA", tonnage: 3.5, seer: 16, type: "R-454B", line: "Classic" },
+        { model: "RA1648AJ1NA", tonnage: 4.0, seer: 16, type: "R-454B", line: "Classic" },
+        { model: "RA1660AJ1NA", tonnage: 5.0, seer: 16, type: "R-454B", line: "Classic" },
+        { model: "UA1624AJ2NA", tonnage: 2.0, seer: 17, type: "R-454B", line: "Prestige" },
+        { model: "UA1630AJ2NA", tonnage: 2.5, seer: 17, type: "R-454B", line: "Prestige" },
+        { model: "UA1636AJ2NA", tonnage: 3.0, seer: 17, type: "R-454B", line: "Prestige" },
+        { model: "UA1642AJ2NA", tonnage: 3.5, seer: 17, type: "R-454B", line: "Prestige" },
+        { model: "UA1648AJ2NA", tonnage: 4.0, seer: 17, type: "R-454B", line: "Prestige" },
+        { model: "UA1660AJ2NA", tonnage: 5.0, seer: 17, type: "R-454B", line: "Prestige" }
+      ];
+      const match = options.reduce((prev, curr) =>
+        Math.abs(curr.tonnage - tons) < Math.abs(prev.tonnage - tons) ? curr : prev
+      );
+      return `Suggested Rheem Model: ${match.model} (${match.tonnage.toFixed(1)}‑ton)
+SEER: ${match.seer}, Refrigerant: ${match.type}, Series: ${match.line}`;
+    }
+  </script>
+</body>
+</html>
